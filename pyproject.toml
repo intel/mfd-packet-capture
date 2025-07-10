@@ -1,0 +1,27 @@
+[build-system]
+requires = [
+    "setuptools>=80.4.0",
+    "wheel"
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+
+[project]
+name = "mfd-packet-capture"
+description = "Module for Packet Capture support. Within the module, there are wrappers written for tcpdump, tshark & pktcap tools."
+requires-python = ">=3.10, <3.14"
+version = "2.15.2"
+dynamic = ["dependencies"]
+license-files = ["LICENSE.md", "AUTHORS.md"]
+readme = {file = "README.md", content-type = "text/markdown"}
+
+[project.urls]
+Homepage = "https://github.com/intel/mfd"
+Repository = "https://github.com/intel/mfd-packet-capture"
+Issues = "https://github.com/intel/mfd-packet-capture/issues"
+Changelog = "https://github.com/intel/mfd-packet-capture/blob/main/CHANGELOG.md"
+
+[tool.setuptools.packages.find]
+exclude = ["examples", "tests*", "sphinx-doc"]
