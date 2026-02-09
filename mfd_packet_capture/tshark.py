@@ -117,38 +117,42 @@ class Tshark(ToolTemplate):
         logger.log(level=log_levels.MODULE_DEBUG, msg="Started tshark.")
         return process
 
-    def _stop_tshark(self, process: "RemoteProcess") -> None:
-        process.stop(1)
-        timeout = TimeoutCounter(5)
-        while not timeout:
-            if not process.running:
-                return
+    def _stop_tshark(self, process: "RemoteProcess", timeout: int | None = None) -> None:
+        process.stop(wait=timeout)
+        if timeout is not None:
+            timeout_counter = TimeoutCounter(timeout)
+            while not timeout_counter:
+                if not process.running:
+                    return
 
-    def _kill_tshark(self, process: "RemoteProcess") -> None:
-        process.kill(1)
-        timeout = TimeoutCounter(5)
-        while not timeout:
-            if not process.running:
-                return
+    def _kill_tshark(self, process: "RemoteProcess", timeout: int | None = None) -> None:
+        process.kill(wait=timeout, with_signal=15)  # SIGTERM
+        if timeout is not None:
+            timeout_counter = TimeoutCounter(timeout)
+            while not timeout_counter:
+                if not process.running:
+                    return
 
-    def stop(self, process: "RemoteProcess", *, expected_output: bool) -> List[str]:
+    def stop(self, process: "RemoteProcess", *, expected_output: bool, timeout: int | None = None) -> List[str]:
         """
         Stop tshark process and report result. Kill tshark process if after timeout is still running.
 
         :param process: OS process with tshark.
         :param expected_output: Decision if user expect to have output from command.
+        :param timeout: Timeout in seconds to wait for process to stop.
         :return: Output of tshark command sliced into list of str.
         :raises TsharkException: If process after stop and kill is still running.
                                  If process unexpectedly returned output.
                                  If process did not return output when expected.
+        :raises TimeoutExpired: If process did not stop or kill in given timeout.
         """
         if process.running:
             logger.log(level=log_levels.MODULE_DEBUG, msg="Stopping tshark process.")
-            self._stop_tshark(process)
+            self._stop_tshark(process, timeout=timeout)
             # if process is still running, kill forcefully.
             if process.running:
                 logger.log(level=log_levels.MODULE_DEBUG, msg="Killing tshark process.")
-                self._kill_tshark(process)
+                self._kill_tshark(process, timeout=timeout)
                 if process.running:
                     raise TsharkException("Problem with kill of tshark process")
 
